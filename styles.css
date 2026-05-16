@@ -1,0 +1,367 @@
+:root {
+  color-scheme: dark;
+  --bg: #07111f;
+  --bg-soft: #0d1b30;
+  --panel: rgba(16, 31, 55, 0.82);
+  --panel-strong: rgba(21, 39, 68, 0.96);
+  --text: #eef6ff;
+  --muted: #9fb0c7;
+  --accent: #ff5f7e;
+  --accent-2: #5de4c7;
+  --gold: #ffd166;
+  --border: rgba(255, 255, 255, 0.12);
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  font-family: Inter, "Noto Sans JP", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(93, 228, 199, 0.24), transparent 34rem),
+    radial-gradient(circle at 85% 20%, rgba(255, 95, 126, 0.22), transparent 30rem),
+    linear-gradient(135deg, #07111f 0%, #0a1425 48%, #111827 100%);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 0.8fr);
+  gap: 1.5rem;
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0;
+}
+
+.hero-card,
+.calendar-card,
+.holiday-card {
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.hero-card {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, 0.72fr);
+  gap: 1.5rem;
+  align-items: stretch;
+  overflow: hidden;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  position: relative;
+}
+
+.hero-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -10% -45% 52%;
+  height: 22rem;
+  background: radial-gradient(circle, rgba(255, 209, 102, 0.18), transparent 70%);
+  pointer-events: none;
+}
+
+.eyebrow {
+  margin: 0 0 0.75rem;
+  color: var(--accent-2);
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  max-width: 12ch;
+  margin-bottom: 1rem;
+  font-size: clamp(2.5rem, 7vw, 5.6rem);
+  line-height: 0.92;
+  letter-spacing: -0.08em;
+}
+
+.intro {
+  max-width: 56rem;
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  line-height: 1.7;
+}
+
+.clock-panel {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  min-height: 19rem;
+  padding: 2rem;
+  border: 1px solid rgba(93, 228, 199, 0.22);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(7, 17, 31, 0.1), rgba(7, 17, 31, 0.5)),
+    var(--panel-strong);
+  position: relative;
+  z-index: 1;
+}
+
+.digital-time {
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(3rem, 8vw, 6.4rem);
+  font-weight: 800;
+  letter-spacing: -0.07em;
+  text-shadow: 0 0 32px rgba(93, 228, 199, 0.34);
+}
+
+.digital-date {
+  color: var(--muted);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  text-align: center;
+}
+
+.timezone-pill {
+  margin-top: 1rem;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  color: var(--gold);
+  background: rgba(255, 209, 102, 0.08);
+  font-weight: 700;
+}
+
+.calendar-card,
+.holiday-card {
+  padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.calendar-toolbar,
+.quick-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.calendar-toolbar h2,
+.holiday-card h2 {
+  margin-bottom: 0.25rem;
+  font-size: clamp(1.55rem, 3vw, 2.2rem);
+}
+
+.calendar-subtitle,
+.note {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.nav-button,
+.secondary-button {
+  border: 1px solid var(--border);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.07);
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.nav-button {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.secondary-button {
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+}
+
+.nav-button:hover,
+.secondary-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(93, 228, 199, 0.52);
+  background: rgba(93, 228, 199, 0.12);
+}
+
+.quick-actions {
+  flex-wrap: wrap;
+  margin: 1.25rem 0;
+}
+
+.year-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.year-picker input {
+  width: 6rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0.65rem 0.75rem;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.weekday-row,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.weekday-row {
+  margin-bottom: 0.55rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.calendar-day {
+  min-height: 6.6rem;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 0.65rem;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.calendar-day.is-empty {
+  opacity: 0.35;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.calendar-day.is-weekend {
+  background: rgba(255, 95, 126, 0.08);
+}
+
+.calendar-day.is-holiday {
+  border-color: rgba(255, 95, 126, 0.56);
+  background: linear-gradient(180deg, rgba(255, 95, 126, 0.22), rgba(255, 95, 126, 0.08));
+}
+
+.calendar-day.is-today {
+  outline: 3px solid rgba(93, 228, 199, 0.7);
+  outline-offset: 2px;
+}
+
+.day-number {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  font-weight: 800;
+}
+
+.is-today .day-number {
+  color: #07111f;
+  background: var(--accent-2);
+}
+
+.holiday-name {
+  display: block;
+  margin-top: 0.5rem;
+  color: #ffd8df;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.holiday-list {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
+}
+
+.holiday-list li {
+  border: 1px solid rgba(255, 95, 126, 0.28);
+  border-radius: 18px;
+  padding: 0.85rem;
+  background: rgba(255, 95, 126, 0.1);
+}
+
+.holiday-list time {
+  display: block;
+  color: var(--gold);
+  font-weight: 800;
+}
+
+.holiday-list span {
+  color: #ffd8df;
+}
+
+.empty-message {
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: var(--border) !important;
+}
+
+@media (max-width: 860px) {
+  .app-shell,
+  .hero-card {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-day {
+    min-height: 5rem;
+    border-radius: 14px;
+    padding: 0.45rem;
+  }
+
+  .holiday-name {
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .app-shell {
+    width: min(100% - 1rem, 1180px);
+    padding: 0.5rem 0;
+  }
+
+  .hero-card,
+  .calendar-card,
+  .holiday-card {
+    border-radius: 20px;
+  }
+
+  .weekday-row,
+  .calendar-grid {
+    gap: 0.3rem;
+  }
+
+  .calendar-day {
+    min-height: 4.35rem;
+  }
+
+  .day-number {
+    width: 1.6rem;
+    height: 1.6rem;
+  }
+}
