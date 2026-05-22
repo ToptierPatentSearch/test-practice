@@ -48,7 +48,8 @@ button {
 
 .hero-card,
 .calendar-card,
-.holiday-card {
+.holiday-card,
+.weather-card {
   border: 1px solid var(--border);
   border-radius: 28px;
   background: var(--panel);
@@ -147,8 +148,13 @@ h1 {
 }
 
 .calendar-card,
-.holiday-card {
+.holiday-card,
+.weather-card {
   padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.weather-card {
+  grid-column: 1 / -1;
 }
 
 .calendar-toolbar,
@@ -160,13 +166,15 @@ h1 {
 }
 
 .calendar-toolbar h2,
-.holiday-card h2 {
+.holiday-card h2,
+.weather-card h2 {
   margin-bottom: 0.25rem;
   font-size: clamp(1.55rem, 3vw, 2.2rem);
 }
 
 .calendar-subtitle,
-.note {
+.note,
+.weather-status {
   color: var(--muted);
   line-height: 1.6;
 }
@@ -263,6 +271,10 @@ h1 {
   background: linear-gradient(180deg, rgba(255, 95, 126, 0.22), rgba(255, 95, 126, 0.08));
 }
 
+.calendar-day.is-solar-term {
+  border-color: rgba(93, 228, 199, 0.55);
+}
+
 .calendar-day.is-today {
   outline: 3px solid rgba(93, 228, 199, 0.7);
   outline-offset: 2px;
@@ -282,16 +294,25 @@ h1 {
   background: var(--accent-2);
 }
 
-.holiday-name {
+.holiday-name,
+.solar-term-name {
   display: block;
   margin-top: 0.5rem;
-  color: #ffd8df;
   font-size: 0.78rem;
   font-weight: 700;
   line-height: 1.3;
 }
 
-.holiday-list {
+.holiday-name {
+  color: #ffd8df;
+}
+
+.solar-term-name {
+  color: #7ef3df;
+}
+
+.holiday-list,
+.weather-list {
   display: grid;
   gap: 0.75rem;
   margin: 1rem 0;
@@ -299,11 +320,21 @@ h1 {
   list-style: none;
 }
 
-.holiday-list li {
-  border: 1px solid rgba(255, 95, 126, 0.28);
+.holiday-list-item,
+.solar-list-item,
+.weather-list li {
   border-radius: 18px;
   padding: 0.85rem;
+}
+
+.holiday-list-item {
+  border: 1px solid rgba(255, 95, 126, 0.28);
   background: rgba(255, 95, 126, 0.1);
+}
+
+.solar-list-item {
+  border: 1px solid rgba(93, 228, 199, 0.38);
+  background: rgba(93, 228, 199, 0.12);
 }
 
 .holiday-list time {
@@ -314,6 +345,36 @@ h1 {
 
 .holiday-list span {
   color: #ffd8df;
+}
+
+.solar-list-item span {
+  color: #c4fff5;
+}
+
+.weather-list li {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.weather-main {
+  font-weight: 700;
+}
+
+.weather-temp {
+  margin-top: 0.4rem;
+  color: var(--gold);
+}
+
+.solar-term-pill {
+  display: inline-block;
+  margin-top: 0.6rem;
+  border: 1px solid rgba(93, 228, 199, 0.5);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  color: #c4fff5;
+  background: rgba(93, 228, 199, 0.14);
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .empty-message {
@@ -334,7 +395,8 @@ h1 {
     padding: 0.45rem;
   }
 
-  .holiday-name {
+  .holiday-name,
+  .solar-term-name {
     font-size: 0.68rem;
   }
 }
@@ -347,7 +409,8 @@ h1 {
 
   .hero-card,
   .calendar-card,
-  .holiday-card {
+  .holiday-card,
+  .weather-card {
     border-radius: 20px;
   }
 
