@@ -144,6 +144,43 @@ function japaneseHolidays(year) {
   return holidays;
 }
 
+function japaneseSolarTerms(year) {
+  const solarTerms = new Map();
+  const leapAdjusted = year % 4 === 0;
+  const terms = [
+    { month: 0, day: 5, name: "小寒 · Shōkan (Minor Cold)" },
+    { month: 0, day: 20, name: "大寒 · Daikan (Major Cold)" },
+    { month: 1, day: leapAdjusted ? 4 : 3, name: "立春 · Risshun (Start of Spring)" },
+    { month: 1, day: 18, name: "雨水 · Usui (Rain Water)" },
+    { month: 2, day: 5, name: "啓蟄 · Keichitsu (Awakening of Insects)" },
+    { month: 2, day: 20, name: "春分 · Shunbun (Spring Equinox, Solar Term)" },
+    { month: 3, day: 4, name: "清明 · Seimei (Pure Brightness)" },
+    { month: 3, day: 20, name: "穀雨 · Kokuu (Grain Rain)" },
+    { month: 4, day: 5, name: "立夏 · Rikka (Start of Summer)" },
+    { month: 4, day: 21, name: "小満 · Shōman (Lesser Fullness of Grain)" },
+    { month: 5, day: 5, name: "芒種 · Bōshu (Grain in Ear)" },
+    { month: 5, day: 21, name: "夏至 · Geshi (Summer Solstice)" },
+    { month: 6, day: 7, name: "小暑 · Shōsho (Minor Heat)" },
+    { month: 6, day: 22, name: "大暑 · Taisho (Major Heat)" },
+    { month: 7, day: 7, name: "立秋 · Risshū (Start of Autumn)" },
+    { month: 7, day: 23, name: "処暑 · Shosho (Limit of Heat)" },
+    { month: 8, day: 7, name: "白露 · Hakuro (White Dew)" },
+    { month: 8, day: 23, name: "秋分 · Shūbun (Autumn Equinox, Solar Term)" },
+    { month: 9, day: 8, name: "寒露 · Kanro (Cold Dew)" },
+    { month: 9, day: 23, name: "霜降 · Sōkō (Frost Descent)" },
+    { month: 10, day: 7, name: "立冬 · Rittō (Start of Winter)" },
+    { month: 10, day: 22, name: "小雪 · Shōsetsu (Lesser Snow)" },
+    { month: 11, day: 7, name: "大雪 · Taisetsu (Major Snow)" },
+    { month: 11, day: 21, name: "冬至 · Tōji (Winter Solstice)" },
+  ];
+
+  for (const term of terms) {
+    addHoliday(solarTerms, year, term.month, term.day, term.name, "solar");
+  }
+
+  return solarTerms;
+}
+
 function updateClock() {
   const now = new Date();
   elements.time.textContent = new Intl.DateTimeFormat("en-GB", {
@@ -158,6 +195,8 @@ function updateClock() {
 
 function renderCalendar() {
   const holidays = japaneseHolidays(visibleYear);
+  const solarTerms = japaneseSolarTerms(visibleYear);
+  const calendarEntries = new Map([...solarTerms, ...holidays]);
   const firstOfMonth = new Date(visibleYear, visibleMonth, 1);
   const totalDays = new Date(visibleYear, visibleMonth + 1, 0).getDate();
   const startOffset = firstOfMonth.getDay();
@@ -166,7 +205,7 @@ function renderCalendar() {
   const monthDate = new Date(visibleYear, visibleMonth, 1);
 
   elements.heading.textContent = monthFormatter.format(monthDate);
-  elements.subtitle.textContent = `Japanese national holidays for ${visibleYear}`;
+  elements.subtitle.textContent = `Japanese national holidays and solar terms for ${visibleYear}`;
   elements.yearInput.value = visibleYear;
   elements.grid.innerHTML = "";
 
@@ -179,7 +218,7 @@ function renderCalendar() {
   for (let day = 1; day <= totalDays; day += 1) {
     const key = dateKey(visibleYear, visibleMonth, day);
     const date = new Date(visibleYear, visibleMonth, day);
-    const holiday = holidays.get(key);
+    const holiday = calendarEntries.get(key);
     const cell = document.createElement("article");
     cell.className = "calendar-day";
     cell.setAttribute("role", "gridcell");
@@ -210,7 +249,7 @@ function renderCalendar() {
     elements.grid.append(cell);
   }
 
-  renderHolidayList(holidays);
+  renderHolidayList(calendarEntries);
 }
 
 function renderHolidayList(holidays) {
