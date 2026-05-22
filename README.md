@@ -1,6 +1,6 @@
 # JST Digital Clock & Japanese Holiday Calendar
 
-A static web app that shows a live Japan Standard Time digital clock beside a monthly calendar that highlights Japanese national holidays, substitute holidays, and citizens' holidays.
+A static web app that shows a live Japan Standard Time digital clock beside a monthly calendar that highlights Japanese national holidays, substitute holidays, citizens' holidays, and the 24 traditional Japanese solar terms (二十四節気).
 
 ## Run the app
 
@@ -32,6 +32,6 @@ Try these checks:
 
 - `index.html` contains the page structure.
 - `styles.css` contains the responsive visual design.
-- `app.js` contains the live JST clock, calendar rendering, and Japanese holiday calculations.
+- `app.js` contains the live JST clock, calendar rendering, Japanese holiday calculations, and Japanese solar term entries.
 
 No install or build step is required.

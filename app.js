@@ -80,6 +80,35 @@ function addHoliday(holidays, year, monthIndex, day, name, type = "national") {
   holidays.set(dateKey(year, monthIndex, day), { name, type });
 }
 
+function japaneseSolarTerms(year) {
+  return new Map([
+    [dateKey(year, 0, 5), "小寒 · Shōkan (Lesser Cold)"],
+    [dateKey(year, 0, 20), "大寒 · Daikan (Greater Cold)"],
+    [dateKey(year, 1, 4), "立春 · Risshun (Beginning of Spring)"],
+    [dateKey(year, 1, 19), "雨水 · Usui (Rain Water)"],
+    [dateKey(year, 2, 5), "啓蟄 · Keichitsu (Awakening of Insects)"],
+    [dateKey(year, 2, 20), "春分 · Shunbun (Spring Equinox)"],
+    [dateKey(year, 3, 4), "清明 · Seimei (Clear and Bright)"],
+    [dateKey(year, 3, 20), "穀雨 · Kokuu (Grain Rain)"],
+    [dateKey(year, 4, 5), "立夏 · Rikka (Beginning of Summer)"],
+    [dateKey(year, 4, 21), "小満 · Shōman (Lesser Fullness)"],
+    [dateKey(year, 5, 6), "芒種 · Bōshu (Grain in Ear)"],
+    [dateKey(year, 5, 21), "夏至 · Geshi (Summer Solstice)"],
+    [dateKey(year, 6, 7), "小暑 · Shōsho (Lesser Heat)"],
+    [dateKey(year, 6, 22), "大暑 · Taisho (Greater Heat)"],
+    [dateKey(year, 7, 7), "立秋 · Risshū (Beginning of Autumn)"],
+    [dateKey(year, 7, 23), "処暑 · Shosho (Limit of Heat)"],
+    [dateKey(year, 8, 7), "白露 · Hakuro (White Dew)"],
+    [dateKey(year, 8, 23), "秋分 · Shūbun (Autumn Equinox)"],
+    [dateKey(year, 9, 8), "寒露 · Kanro (Cold Dew)"],
+    [dateKey(year, 9, 23), "霜降 · Sōkō (Frost Descent)"],
+    [dateKey(year, 10, 7), "立冬 · Rittō (Beginning of Winter)"],
+    [dateKey(year, 10, 22), "小雪 · Shōsetsu (Lesser Snow)"],
+    [dateKey(year, 11, 7), "大雪 · Taisetsu (Greater Snow)"],
+    [dateKey(year, 11, 21), "冬至 · Tōji (Winter Solstice)"],
+  ]);
+}
+
 function baseJapaneseHolidays(year) {
   const holidays = new Map();
 
@@ -158,6 +187,7 @@ function updateClock() {
 
 function renderCalendar() {
   const holidays = japaneseHolidays(visibleYear);
+  const solarTerms = japaneseSolarTerms(visibleYear);
   const firstOfMonth = new Date(visibleYear, visibleMonth, 1);
   const totalDays = new Date(visibleYear, visibleMonth + 1, 0).getDate();
   const startOffset = firstOfMonth.getDay();
@@ -180,10 +210,11 @@ function renderCalendar() {
     const key = dateKey(visibleYear, visibleMonth, day);
     const date = new Date(visibleYear, visibleMonth, day);
     const holiday = holidays.get(key);
+    const solarTerm = solarTerms.get(key);
     const cell = document.createElement("article");
     cell.className = "calendar-day";
     cell.setAttribute("role", "gridcell");
-    cell.setAttribute("aria-label", `${monthFormatter.format(monthDate)} ${day}${holiday ? `, ${holiday.name}` : ""}`);
+    cell.setAttribute("aria-label", `${monthFormatter.format(monthDate)} ${day}${holiday ? `, ${holiday.name}` : ""}${solarTerm ? `${holiday ? "," : ""} ${solarTerm}` : ""}`);
 
     if (date.getDay() === 0 || date.getDay() === 6) {
       cell.classList.add("is-weekend");
@@ -206,29 +237,38 @@ function renderCalendar() {
       label.textContent = holiday.name;
       cell.append(label);
     }
+    if (solarTerm) {
+      const label = document.createElement("span");
+      label.className = "holiday-name";
+      label.textContent = solarTerm;
+      cell.append(label);
+    }
 
     elements.grid.append(cell);
   }
 
-  renderHolidayList(holidays);
+  renderHolidayList(holidays, solarTerms);
 }
 
-function renderHolidayList(holidays) {
-  const monthlyHolidays = Array.from(holidays.entries())
+function renderHolidayList(holidays, solarTerms) {
+  const monthlyEntries = [
+    ...Array.from(holidays.entries()).map(([key, holiday]) => [key, holiday.name]),
+    ...Array.from(solarTerms.entries()),
+  ]
     .filter(([key]) => key.startsWith(`${visibleYear}-${pad(visibleMonth + 1)}`))
     .sort(([left], [right]) => left.localeCompare(right));
 
   elements.holidayList.innerHTML = "";
 
-  if (monthlyHolidays.length === 0) {
+  if (monthlyEntries.length === 0) {
     const empty = document.createElement("li");
     empty.className = "empty-message";
-    empty.textContent = "No Japanese national holidays this month.";
+    empty.textContent = "No Japanese holidays or solar terms this month.";
     elements.holidayList.append(empty);
     return;
   }
 
-  for (const [key, holiday] of monthlyHolidays) {
+  for (const [key, label] of monthlyEntries) {
     const item = document.createElement("li");
     const date = new Date(`${key}T00:00:00`);
     const time = document.createElement("time");
@@ -236,7 +276,7 @@ function renderHolidayList(holidays) {
 
     time.dateTime = key;
     time.textContent = date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-    name.textContent = holiday.name;
+    name.textContent = label;
 
     item.append(time, name);
     elements.holidayList.append(item);
