@@ -26,6 +26,8 @@ const elements = {
   next: document.querySelector("#next-month"),
   today: document.querySelector("#today-button"),
   yearInput: document.querySelector("#year-input"),
+  weatherStatus: document.querySelector("#weather-status"),
+  weatherList: document.querySelector("#weather-list"),
 };
 
 let visibleYear;
@@ -240,6 +242,7 @@ function renderCalendar() {
     if (solarTerm) {
       const label = document.createElement("span");
       label.className = "holiday-name";
+      label.classList.add("solar-term");
       label.textContent = solarTerm;
       cell.append(label);
     }
@@ -252,11 +255,11 @@ function renderCalendar() {
 
 function renderHolidayList(holidays, solarTerms) {
   const monthlyEntries = [
-    ...Array.from(holidays.entries()).map(([key, holiday]) => [key, holiday.name]),
-    ...Array.from(solarTerms.entries()),
+    ...Array.from(holidays.entries()).map(([key, holiday]) => ({ key, label: holiday.name, kind: "holiday" })),
+    ...Array.from(solarTerms.entries()).map(([key, label]) => ({ key, label, kind: "solar-term" })),
   ]
-    .filter(([key]) => key.startsWith(`${visibleYear}-${pad(visibleMonth + 1)}`))
-    .sort(([left], [right]) => left.localeCompare(right));
+    .filter(({ key }) => key.startsWith(`${visibleYear}-${pad(visibleMonth + 1)}`))
+    .sort((left, right) => left.key.localeCompare(right.key));
 
   elements.holidayList.innerHTML = "";
 
@@ -268,8 +271,9 @@ function renderHolidayList(holidays, solarTerms) {
     return;
   }
 
-  for (const [key, label] of monthlyEntries) {
+  for (const { key, label, kind } of monthlyEntries) {
     const item = document.createElement("li");
+    item.classList.add(kind);
     const date = new Date(`${key}T00:00:00`);
     const time = document.createElement("time");
     const name = document.createElement("span");
@@ -281,6 +285,102 @@ function renderHolidayList(holidays, solarTerms) {
     item.append(time, name);
     elements.holidayList.append(item);
   }
+}
+
+function weatherCodeLabel(code) {
+  const map = {
+    0: "Clear",
+    1: "Mainly clear",
+    2: "Partly cloudy",
+    3: "Overcast",
+    45: "Fog",
+    48: "Rime fog",
+    51: "Light drizzle",
+    53: "Drizzle",
+    55: "Dense drizzle",
+    56: "Freezing drizzle",
+    57: "Dense freezing drizzle",
+    61: "Light rain",
+    63: "Rain",
+    65: "Heavy rain",
+    66: "Freezing rain",
+    67: "Heavy freezing rain",
+    71: "Light snow",
+    73: "Snow",
+    75: "Heavy snow",
+    77: "Snow grains",
+    80: "Rain showers",
+    81: "Heavy rain showers",
+    82: "Violent showers",
+    85: "Snow showers",
+    86: "Heavy snow showers",
+    95: "Thunderstorm",
+    96: "Thunderstorm hail",
+    99: "Severe thunderstorm hail",
+  };
+  return map[code] ?? "Unknown";
+}
+
+async function fetchWeatherForecast(lat, lon) {
+  const url = new URL("https://api.open-meteo.com/v1/forecast");
+  url.search = new URLSearchParams({
+    latitude: lat,
+    longitude: lon,
+    daily: "weathercode,temperature_2m_max,temperature_2m_min",
+    timezone: "auto",
+    forecast_days: "7",
+  }).toString();
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Weather request failed: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+function renderWeather(forecast) {
+  const { time, weathercode, temperature_2m_max: max, temperature_2m_min: min } = forecast.daily;
+  elements.weatherList.innerHTML = "";
+
+  time.forEach((isoDate, index) => {
+    const item = document.createElement("li");
+    const date = new Date(`${isoDate}T00:00:00`);
+    const day = document.createElement("time");
+    const summary = document.createElement("span");
+    const temps = document.createElement("strong");
+
+    day.dateTime = isoDate;
+    day.textContent = date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+    summary.textContent = weatherCodeLabel(weathercode[index]);
+    temps.textContent = `${Math.round(max[index])}° / ${Math.round(min[index])}°C`;
+    item.append(day, summary, temps);
+    elements.weatherList.append(item);
+  });
+}
+
+function initWeather() {
+  if (!navigator.geolocation) {
+    elements.weatherStatus.textContent = "Geolocation is not available in this browser.";
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async ({ coords }) => {
+      try {
+        elements.weatherStatus.textContent = "Loading 7-day local forecast…";
+        const data = await fetchWeatherForecast(coords.latitude, coords.longitude);
+        elements.weatherStatus.textContent = `Forecast for ${data.timezone}. Max/Min temperatures in °C.`;
+        renderWeather(data);
+      } catch (error) {
+        elements.weatherStatus.textContent = "Could not load weather forecast right now.";
+      }
+    },
+    () => {
+      elements.weatherStatus.textContent = "Allow location access to see your local 7-day forecast.";
+    },
+    { enableHighAccuracy: false, timeout: 10000 }
+  );
 }
 
 function moveMonth(delta) {
@@ -317,6 +417,7 @@ function init() {
   jumpToJapanToday();
   setupControls();
   updateClock();
+  initWeather();
   setInterval(updateClock, 1000);
 }
 
