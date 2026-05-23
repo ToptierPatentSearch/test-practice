@@ -2,6 +2,10 @@
 
 A static web app that shows a live Japan Standard Time digital clock beside a monthly calendar that highlights Japanese national holidays, substitute holidays, citizens' holidays, and the 24 traditional Japanese solar terms (二十四節気).
 
+## Highlights
+
+- Android smartphone friendly layout with touch-sized controls and compact card spacing for narrow screens.
+
 ## Run the app
 
 From this repository root, start a simple local web server:
