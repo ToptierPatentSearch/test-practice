@@ -1,81 +1,12 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#07111f" />
-    <title>JST Digital Clock & Japanese Holiday Calendar</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="styles.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>React + Vite</title>
   </head>
   <body>
-    <main class="app-shell" aria-labelledby="app-title">
-      <section class="hero-card">
-        <div class="hero-copy">
-          <p class="eyebrow">日本標準時 · Japan Standard Time</p>
-          <h1 id="app-title">Digital Clock & Japanese Holiday Calendar</h1>
-          <p class="intro">
-            A live JST clock paired with an interactive monthly calendar that highlights Japan's national holidays, substitute holidays, and citizens' holidays.
-          </p>
-        </div>
-
-        <div class="clock-panel" aria-live="polite">
-          <div id="jst-time" class="digital-time">--:--:--</div>
-          <div id="jst-date" class="digital-date">Loading Japan date…</div>
-          <div class="timezone-pill">UTC+09:00</div>
-        </div>
-      </section>
-
-      <section class="calendar-card" aria-labelledby="calendar-heading">
-        <div class="calendar-toolbar">
-          <button id="prev-month" class="nav-button" type="button" aria-label="Show previous month">‹</button>
-          <div>
-            <h2 id="calendar-heading">Calendar</h2>
-            <p id="calendar-subtitle" class="calendar-subtitle">Japanese national holidays</p>
-          </div>
-          <button id="next-month" class="nav-button" type="button" aria-label="Show next month">›</button>
-        </div>
-
-        <div class="quick-actions">
-          <button id="today-button" class="secondary-button" type="button">Jump to today in Japan</button>
-          <label class="year-picker">
-            Year
-            <input id="year-input" type="number" min="2022" max="2099" step="1" />
-          </label>
-        </div>
-
-        <div class="weekday-row" aria-hidden="true">
-          <span>Sun</span>
-          <span>Mon</span>
-          <span>Tue</span>
-          <span>Wed</span>
-          <span>Thu</span>
-          <span>Fri</span>
-          <span>Sat</span>
-        </div>
-        <div id="calendar-grid" class="calendar-grid" role="grid" aria-label="Monthly calendar"></div>
-      </section>
-
-      <aside class="holiday-card" aria-labelledby="holiday-list-heading">
-        <h2 id="holiday-list-heading">Holidays this month</h2>
-        <ul id="holiday-list" class="holiday-list"></ul>
-        <p class="note">
-          Holiday calculations follow Japan's current recurring national holiday rules, including transfer holidays when a national holiday falls on Sunday and citizens' holidays between two national holidays.
-        </p>
-      </aside>
-
-      <section class="weather-card" aria-labelledby="weather-heading">
-        <h2 id="weather-heading">Local 7-day weather forecast</h2>
-        <p id="weather-status" class="weather-status">Detecting your location…</p>
-        <ul id="weather-list" class="weather-list"></ul>
-      </section>
-    </main>
-
-    <script src="app.js"></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
