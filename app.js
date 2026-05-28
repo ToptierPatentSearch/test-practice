@@ -1,4 +1,6 @@
 const JAPAN_TIME_ZONE = "Asia/Tokyo";
+const TEMPERATURE_UNIT = "celsius";
+const TEMPERATURE_UNIT_LABEL = "°C";
 const monthFormatter = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: JAPAN_TIME_ZONE });
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   weekday: "long",
@@ -329,6 +331,7 @@ async function fetchWeatherForecast(lat, lon) {
     daily: "weathercode,temperature_2m_max,temperature_2m_min",
     timezone: "auto",
     forecast_days: "7",
+    temperature_unit: TEMPERATURE_UNIT,
   }).toString();
 
   const response = await fetch(url);
@@ -353,7 +356,7 @@ function renderWeather(forecast) {
     day.dateTime = isoDate;
     day.textContent = date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
     summary.textContent = weatherCodeLabel(weathercode[index]);
-    temps.textContent = `${Math.round(max[index])}° / ${Math.round(min[index])}°C`;
+    temps.textContent = `${Math.round(max[index])}${TEMPERATURE_UNIT_LABEL} / ${Math.round(min[index])}${TEMPERATURE_UNIT_LABEL}`;
     item.append(day, summary, temps);
     elements.weatherList.append(item);
   });
@@ -370,7 +373,7 @@ function initWeather() {
       try {
         elements.weatherStatus.textContent = "Loading 7-day local forecast…";
         const data = await fetchWeatherForecast(coords.latitude, coords.longitude);
-        elements.weatherStatus.textContent = `Forecast for ${data.timezone}. Max/Min temperatures in °C.`;
+        elements.weatherStatus.textContent = `Forecast for ${data.timezone}. Max/Min temperatures in ${TEMPERATURE_UNIT_LABEL}.`;
         renderWeather(data);
       } catch (error) {
         elements.weatherStatus.textContent = "Could not load weather forecast right now.";
