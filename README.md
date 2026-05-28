@@ -35,3 +35,4 @@ Try these checks:
 - `app.js` contains the live JST clock, calendar rendering, and Japanese holiday calculations.
 
 No install or build step is required.
+.
