@@ -328,7 +328,7 @@ async function fetchWeatherForecast(lat, lon) {
   url.search = new URLSearchParams({
     latitude: lat,
     longitude: lon,
-    daily: "weathercode,temperature_2m_max,temperature_2m_min",
+    daily: "weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset",
     timezone: "auto",
     forecast_days: "7",
     temperature_unit: TEMPERATURE_UNIT,
@@ -342,8 +342,22 @@ async function fetchWeatherForecast(lat, lon) {
   return response.json();
 }
 
+function formatLocalSunTime(isoDateTime) {
+  const [, time = ""] = (isoDateTime ?? "").split("T");
+  const [hourText, minute = "00"] = time.split(":");
+  const hour = Number(hourText);
+
+  if (!Number.isFinite(hour)) {
+    return "--:--";
+  }
+
+  const period = hour >= 12 ? "PM" : "AM";
+  const twelveHour = hour % 12 || 12;
+  return `${twelveHour}:${minute} ${period}`;
+}
+
 function renderWeather(forecast) {
-  const { time, weathercode, temperature_2m_max: max, temperature_2m_min: min } = forecast.daily;
+  const { time, weathercode, temperature_2m_max: max, temperature_2m_min: min, sunrise, sunset } = forecast.daily;
   elements.weatherList.innerHTML = "";
 
   time.forEach((isoDate, index) => {
@@ -352,12 +366,15 @@ function renderWeather(forecast) {
     const day = document.createElement("time");
     const summary = document.createElement("span");
     const temps = document.createElement("strong");
+    const sunTimes = document.createElement("span");
 
     day.dateTime = isoDate;
     day.textContent = date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
     summary.textContent = weatherCodeLabel(weathercode[index]);
     temps.textContent = `${Math.round(max[index])}${TEMPERATURE_UNIT_LABEL} / ${Math.round(min[index])}${TEMPERATURE_UNIT_LABEL}`;
-    item.append(day, summary, temps);
+    sunTimes.className = "sun-times";
+    sunTimes.textContent = `☀️ ${formatLocalSunTime(sunrise[index])} · 🌙 ${formatLocalSunTime(sunset[index])}`;
+    item.append(day, summary, temps, sunTimes);
     elements.weatherList.append(item);
   });
 }

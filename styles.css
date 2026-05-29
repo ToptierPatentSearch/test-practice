@@ -329,9 +329,14 @@ h1 {
   color: #bff4ea;
 }
 
+.sun-times-intro,
 .weather-status {
   margin: 0.5rem 0 1rem;
   color: var(--muted);
+}
+
+.sun-times-intro {
+  margin-bottom: 0.25rem;
 }
 
 .weather-list {
@@ -355,6 +360,12 @@ h1 {
 .weather-list time {
   color: var(--gold);
   font-weight: 800;
+}
+
+.sun-times {
+  color: #bff4ea;
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
 .holiday-list time {
