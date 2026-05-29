@@ -328,7 +328,7 @@ async function fetchWeatherForecast(lat, lon) {
   url.search = new URLSearchParams({
     latitude: lat,
     longitude: lon,
-    daily: "weathercode,temperature_2m_max,temperature_2m_min",
+    daily: "weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset",
     timezone: "auto",
     forecast_days: "7",
     temperature_unit: TEMPERATURE_UNIT,
@@ -342,8 +342,20 @@ async function fetchWeatherForecast(lat, lon) {
   return response.json();
 }
 
+function formatLocalSunTime(value) {
+  return new Date(value).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
 function renderWeather(forecast) {
-  const { time, weathercode, temperature_2m_max: max, temperature_2m_min: min } = forecast.daily;
+  const {
+    time,
+    weathercode,
+    temperature_2m_max: max,
+    temperature_2m_min: min,
+    sunrise,
+    sunset,
+  } = forecast.daily;
+  const today = forecast.current_weather?.time?.slice(0, 10) ?? time[0];
   elements.weatherList.innerHTML = "";
 
   time.forEach((isoDate, index) => {
@@ -358,6 +370,13 @@ function renderWeather(forecast) {
     summary.textContent = weatherCodeLabel(weathercode[index]);
     temps.textContent = `${Math.round(max[index])}${TEMPERATURE_UNIT_LABEL} / ${Math.round(min[index])}${TEMPERATURE_UNIT_LABEL}`;
     item.append(day, summary, temps);
+
+    if (isoDate === today) {
+      const sunTimes = document.createElement("span");
+      sunTimes.className = "sun-times";
+      sunTimes.textContent = `Sunrise ${formatLocalSunTime(sunrise[index])} · Sunset ${formatLocalSunTime(sunset[index])}`;
+      item.append(sunTimes);
+    }
     elements.weatherList.append(item);
   });
 }
@@ -373,7 +392,7 @@ function initWeather() {
       try {
         elements.weatherStatus.textContent = "Loading 7-day local forecast…";
         const data = await fetchWeatherForecast(coords.latitude, coords.longitude);
-        elements.weatherStatus.textContent = `Forecast for ${data.timezone}. Max/Min temperatures in ${TEMPERATURE_UNIT_LABEL}.`;
+        elements.weatherStatus.textContent = `Forecast for ${data.timezone}. Max/Min temperatures in ${TEMPERATURE_UNIT_LABEL}; sunrise and sunset are shown for today only.`;
         renderWeather(data);
       } catch (error) {
         elements.weatherStatus.textContent = "Could not load weather forecast right now.";
