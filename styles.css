@@ -252,7 +252,7 @@ h1 {
 }
 
 .calendar-day {
-  min-height: 6.6rem;
+  min-height: 7.4rem;
   border: 1px solid var(--border);
   border-radius: 18px;
   padding: 0.65rem;
@@ -303,6 +303,15 @@ h1 {
 
 .holiday-name.solar-term {
   color: #9ae4ff;
+}
+
+.sun-times {
+  display: block;
+  margin-top: 0.5rem;
+  color: #ffe9a8;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.35;
 }
 
 .holiday-list {
@@ -380,12 +389,13 @@ h1 {
   }
 
   .calendar-day {
-    min-height: 5rem;
+    min-height: 5.75rem;
     border-radius: 14px;
     padding: 0.45rem;
   }
 
-  .holiday-name {
+  .holiday-name,
+  .sun-times {
     font-size: 0.68rem;
   }
 }
@@ -408,7 +418,7 @@ h1 {
   }
 
   .calendar-day {
-    min-height: 4.35rem;
+    min-height: 5.25rem;
   }
 
   .day-number {
