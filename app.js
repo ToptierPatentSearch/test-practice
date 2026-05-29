@@ -1,6 +1,9 @@
 const JAPAN_TIME_ZONE = "Asia/Tokyo";
 const TEMPERATURE_UNIT = "celsius";
 const TEMPERATURE_UNIT_LABEL = "°C";
+const SUNRISE_ZENITH_DEGREES = 90.833;
+const RAD_TO_DEG = 180 / Math.PI;
+const DEG_TO_RAD = Math.PI / 180;
 const monthFormatter = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: JAPAN_TIME_ZONE });
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   weekday: "long",
@@ -34,6 +37,7 @@ const elements = {
 
 let visibleYear;
 let visibleMonth;
+let localSolarLocation = null;
 
 function pad(value) {
   return String(value).padStart(2, "0");
@@ -56,6 +60,81 @@ function getJapanDateParts(date = new Date()) {
   }).formatToParts(date);
 
   return Object.fromEntries(parts.filter(({ type }) => type !== "literal").map(({ type, value }) => [type, Number(value)]));
+}
+
+function normalizeDegrees(value) {
+  return ((value % 360) + 360) % 360;
+}
+
+function normalizeHours(value) {
+  return ((value % 24) + 24) % 24;
+}
+
+function dayOfYear(year, monthIndex, day) {
+  const date = Date.UTC(year, monthIndex, day);
+  const yearStart = Date.UTC(year, 0, 0);
+  return Math.floor((date - yearStart) / 86400000);
+}
+
+function calculateSolarEvent(year, monthIndex, day, latitude, longitude, isSunrise) {
+  const n = dayOfYear(year, monthIndex, day);
+  const longitudeHour = longitude / 15;
+  const approximateTime = n + ((isSunrise ? 6 : 18) - longitudeHour) / 24;
+  const meanAnomaly = 0.9856 * approximateTime - 3.289;
+  const trueLongitude = normalizeDegrees(
+    meanAnomaly +
+      1.916 * Math.sin(meanAnomaly * DEG_TO_RAD) +
+      0.02 * Math.sin(2 * meanAnomaly * DEG_TO_RAD) +
+      282.634
+  );
+
+  let rightAscension = normalizeDegrees(Math.atan(0.91764 * Math.tan(trueLongitude * DEG_TO_RAD)) * RAD_TO_DEG);
+  rightAscension += Math.floor(trueLongitude / 90) * 90 - Math.floor(rightAscension / 90) * 90;
+  rightAscension /= 15;
+
+  const sinDeclination = 0.39782 * Math.sin(trueLongitude * DEG_TO_RAD);
+  const cosDeclination = Math.cos(Math.asin(sinDeclination));
+  const cosLocalHour =
+    (Math.cos(SUNRISE_ZENITH_DEGREES * DEG_TO_RAD) - sinDeclination * Math.sin(latitude * DEG_TO_RAD)) /
+    (cosDeclination * Math.cos(latitude * DEG_TO_RAD));
+
+  if (cosLocalHour > 1 || cosLocalHour < -1) {
+    return null;
+  }
+
+  const localHour = (isSunrise ? 360 - Math.acos(cosLocalHour) * RAD_TO_DEG : Math.acos(cosLocalHour) * RAD_TO_DEG) / 15;
+  const localMeanTime = localHour + rightAscension - 0.06571 * approximateTime - 6.622;
+  const universalTime = normalizeHours(localMeanTime - longitudeHour);
+  const hours = Math.floor(universalTime);
+  const minutes = Math.floor((universalTime - hours) * 60);
+  const seconds = Math.round((((universalTime - hours) * 60) - minutes) * 60);
+
+  return new Date(Date.UTC(year, monthIndex, day, hours, minutes, seconds));
+}
+
+function localSunTimes(year, monthIndex, day) {
+  if (!localSolarLocation) {
+    return null;
+  }
+
+  const { latitude, longitude, timeZone } = localSolarLocation;
+  const sunrise = calculateSolarEvent(year, monthIndex, day, latitude, longitude, true);
+  const sunset = calculateSolarEvent(year, monthIndex, day, latitude, longitude, false);
+
+  if (!sunrise || !sunset) {
+    return { label: "Polar day/night", ariaLabel: "Sunrise and sunset unavailable due to polar day or night" };
+  }
+
+  const formatter = new Intl.DateTimeFormat(undefined, {
+    timeZone,
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
+  return {
+    label: `☀ ${formatter.format(sunrise)} · 🌙 ${formatter.format(sunset)}`,
+    ariaLabel: `local sunrise ${formatter.format(sunrise)}, local sunset ${formatter.format(sunset)}`,
+  };
 }
 
 function nthMonday(year, monthIndex, occurrence) {
@@ -215,10 +294,14 @@ function renderCalendar() {
     const date = new Date(visibleYear, visibleMonth, day);
     const holiday = holidays.get(key);
     const solarTerm = solarTerms.get(key);
+    const sunTimes = localSunTimes(visibleYear, visibleMonth, day);
     const cell = document.createElement("article");
     cell.className = "calendar-day";
     cell.setAttribute("role", "gridcell");
-    cell.setAttribute("aria-label", `${monthFormatter.format(monthDate)} ${day}${holiday ? `, ${holiday.name}` : ""}${solarTerm ? `${holiday ? "," : ""} ${solarTerm}` : ""}`);
+    cell.setAttribute(
+      "aria-label",
+      `${monthFormatter.format(monthDate)} ${day}${holiday ? `, ${holiday.name}` : ""}${solarTerm ? `${holiday ? "," : ""} ${solarTerm}` : ""}${sunTimes ? `, ${sunTimes.ariaLabel}` : ""}`
+    );
 
     if (date.getDay() === 0 || date.getDay() === 6) {
       cell.classList.add("is-weekend");
@@ -246,6 +329,12 @@ function renderCalendar() {
       label.className = "holiday-name";
       label.classList.add("solar-term");
       label.textContent = solarTerm;
+      cell.append(label);
+    }
+    if (sunTimes) {
+      const label = document.createElement("span");
+      label.className = "sun-times";
+      label.textContent = sunTimes.label;
       cell.append(label);
     }
 
@@ -370,13 +459,22 @@ function initWeather() {
 
   navigator.geolocation.getCurrentPosition(
     async ({ coords }) => {
+      localSolarLocation = {
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+      };
+      renderCalendar();
+
       try {
-        elements.weatherStatus.textContent = "Loading 7-day local forecast…";
+        elements.weatherStatus.textContent = "Loading 7-day local forecast and monthly sunrise/sunset times…";
         const data = await fetchWeatherForecast(coords.latitude, coords.longitude);
-        elements.weatherStatus.textContent = `Forecast for ${data.timezone}. Max/Min temperatures in ${TEMPERATURE_UNIT_LABEL}.`;
+        localSolarLocation.timeZone = data.timezone || localSolarLocation.timeZone;
+        renderCalendar();
+        elements.weatherStatus.textContent = `Forecast and calendar sun times for ${localSolarLocation.timeZone}. Max/Min temperatures in ${TEMPERATURE_UNIT_LABEL}.`;
         renderWeather(data);
       } catch (error) {
-        elements.weatherStatus.textContent = "Could not load weather forecast right now.";
+        elements.weatherStatus.textContent = `Sunrise/sunset times are shown for ${localSolarLocation.timeZone}, but the weather forecast could not load right now.`;
       }
     },
     () => {
