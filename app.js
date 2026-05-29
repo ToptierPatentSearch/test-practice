@@ -1,6 +1,8 @@
 const JAPAN_TIME_ZONE = "Asia/Tokyo";
 const TEMPERATURE_UNIT = "celsius";
 const TEMPERATURE_UNIT_LABEL = "°C";
+const SUN_ZENITH_DEGREES = 90.833;
+const RADIAN_PER_DEGREE = Math.PI / 180;
 const monthFormatter = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: JAPAN_TIME_ZONE });
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   weekday: "long",
@@ -28,12 +30,14 @@ const elements = {
   next: document.querySelector("#next-month"),
   today: document.querySelector("#today-button"),
   yearInput: document.querySelector("#year-input"),
+  sunStatus: document.querySelector("#sun-status"),
   weatherStatus: document.querySelector("#weather-status"),
   weatherList: document.querySelector("#weather-list"),
 };
 
 let visibleYear;
 let visibleMonth;
+let localSunCoordinates = null;
 
 function pad(value) {
   return String(value).padStart(2, "0");
@@ -45,6 +49,73 @@ function dateKey(year, monthIndex, day) {
 
 function dateKeyFromDate(date) {
   return dateKey(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function normalizeDegrees(value) {
+  return ((value % 360) + 360) % 360;
+}
+
+function normalizeHours(value) {
+  return ((value % 24) + 24) % 24;
+}
+
+function dayOfYear(year, monthIndex, day) {
+  const start = Date.UTC(year, 0, 0);
+  const current = Date.UTC(year, monthIndex, day);
+  return Math.floor((current - start) / 86400000);
+}
+
+function calculateSunEvent(year, monthIndex, day, latitude, longitude, isSunrise) {
+  const dateNumber = dayOfYear(year, monthIndex, day);
+  const longitudeHour = longitude / 15;
+  const approximateTime = dateNumber + ((isSunrise ? 6 : 18) - longitudeHour) / 24;
+  const meanAnomaly = 0.9856 * approximateTime - 3.289;
+  const trueLongitude = normalizeDegrees(
+    meanAnomaly +
+      1.916 * Math.sin(meanAnomaly * RADIAN_PER_DEGREE) +
+      0.02 * Math.sin(2 * meanAnomaly * RADIAN_PER_DEGREE) +
+      282.634
+  );
+
+  let rightAscension = normalizeDegrees(Math.atan(0.91764 * Math.tan(trueLongitude * RADIAN_PER_DEGREE)) / RADIAN_PER_DEGREE);
+  rightAscension += Math.floor(trueLongitude / 90) * 90 - Math.floor(rightAscension / 90) * 90;
+  rightAscension /= 15;
+
+  const sinDeclination = 0.39782 * Math.sin(trueLongitude * RADIAN_PER_DEGREE);
+  const cosDeclination = Math.cos(Math.asin(sinDeclination));
+  const cosLocalHour =
+    (Math.cos(SUN_ZENITH_DEGREES * RADIAN_PER_DEGREE) - sinDeclination * Math.sin(latitude * RADIAN_PER_DEGREE)) /
+    (cosDeclination * Math.cos(latitude * RADIAN_PER_DEGREE));
+
+  if (cosLocalHour > 1 || cosLocalHour < -1) {
+    return null;
+  }
+
+  const localHour = (isSunrise ? 360 - Math.acos(cosLocalHour) / RADIAN_PER_DEGREE : Math.acos(cosLocalHour) / RADIAN_PER_DEGREE) / 15;
+  const localMeanTime = localHour + rightAscension - 0.06571 * approximateTime - 6.622;
+  const universalTime = normalizeHours(localMeanTime - longitudeHour);
+
+  return new Date(Date.UTC(year, monthIndex, day) + universalTime * 60 * 60 * 1000);
+}
+
+function formatSunTime(date) {
+  if (!date) {
+    return "—";
+  }
+
+  return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(date);
+}
+
+function sunTimesForDate(year, monthIndex, day) {
+  if (!localSunCoordinates) {
+    return null;
+  }
+
+  const { latitude, longitude } = localSunCoordinates;
+  return {
+    sunrise: calculateSunEvent(year, monthIndex, day, latitude, longitude, true),
+    sunset: calculateSunEvent(year, monthIndex, day, latitude, longitude, false),
+  };
 }
 
 function getJapanDateParts(date = new Date()) {
@@ -200,7 +271,7 @@ function renderCalendar() {
   const monthDate = new Date(visibleYear, visibleMonth, 1);
 
   elements.heading.textContent = monthFormatter.format(monthDate);
-  elements.subtitle.textContent = `Japanese national holidays for ${visibleYear}`;
+  elements.subtitle.textContent = `Japanese national holidays for ${visibleYear}${localSunCoordinates ? " · local sunrise and sunset times" : ""}`;
   elements.yearInput.value = visibleYear;
   elements.grid.innerHTML = "";
 
@@ -215,10 +286,18 @@ function renderCalendar() {
     const date = new Date(visibleYear, visibleMonth, day);
     const holiday = holidays.get(key);
     const solarTerm = solarTerms.get(key);
+    const sunTimes = sunTimesForDate(visibleYear, visibleMonth, day);
+    const sunriseLabel = sunTimes ? formatSunTime(sunTimes.sunrise) : null;
+    const sunsetLabel = sunTimes ? formatSunTime(sunTimes.sunset) : null;
     const cell = document.createElement("article");
     cell.className = "calendar-day";
     cell.setAttribute("role", "gridcell");
-    cell.setAttribute("aria-label", `${monthFormatter.format(monthDate)} ${day}${holiday ? `, ${holiday.name}` : ""}${solarTerm ? `${holiday ? "," : ""} ${solarTerm}` : ""}`);
+    cell.setAttribute(
+      "aria-label",
+      `${monthFormatter.format(monthDate)} ${day}${holiday ? `, ${holiday.name}` : ""}${solarTerm ? `${holiday ? "," : ""} ${solarTerm}` : ""}${
+        sunTimes ? `, sunrise ${sunriseLabel}, sunset ${sunsetLabel}` : ""
+      }`
+    );
 
     if (date.getDay() === 0 || date.getDay() === 6) {
       cell.classList.add("is-weekend");
@@ -247,6 +326,20 @@ function renderCalendar() {
       label.classList.add("solar-term");
       label.textContent = solarTerm;
       cell.append(label);
+    }
+
+    if (sunTimes) {
+      const sun = document.createElement("div");
+      const sunrise = document.createElement("span");
+      const sunset = document.createElement("span");
+
+      sun.className = "sun-times";
+      sunrise.title = "Local sunrise";
+      sunset.title = "Local sunset";
+      sunrise.textContent = `☀︎ ${sunriseLabel}`;
+      sunset.textContent = `☾ ${sunsetLabel}`;
+      sun.append(sunrise, sunset);
+      cell.append(sun);
     }
 
     elements.grid.append(cell);
@@ -362,24 +455,34 @@ function renderWeather(forecast) {
   });
 }
 
-function initWeather() {
+async function initWeather(coords) {
+  try {
+    elements.weatherStatus.textContent = "Loading 7-day local forecast…";
+    const data = await fetchWeatherForecast(coords.latitude, coords.longitude);
+    elements.weatherStatus.textContent = `Forecast for ${data.timezone}. Max/Min temperatures in ${TEMPERATURE_UNIT_LABEL}.`;
+    renderWeather(data);
+  } catch (error) {
+    elements.weatherStatus.textContent = "Could not load weather forecast right now.";
+  }
+}
+
+function initLocalData() {
   if (!navigator.geolocation) {
+    elements.sunStatus.textContent = "Geolocation is not available, so local sunrise and sunset times cannot be shown.";
     elements.weatherStatus.textContent = "Geolocation is not available in this browser.";
     return;
   }
 
   navigator.geolocation.getCurrentPosition(
-    async ({ coords }) => {
-      try {
-        elements.weatherStatus.textContent = "Loading 7-day local forecast…";
-        const data = await fetchWeatherForecast(coords.latitude, coords.longitude);
-        elements.weatherStatus.textContent = `Forecast for ${data.timezone}. Max/Min temperatures in ${TEMPERATURE_UNIT_LABEL}.`;
-        renderWeather(data);
-      } catch (error) {
-        elements.weatherStatus.textContent = "Could not load weather forecast right now.";
-      }
+    ({ coords }) => {
+      localSunCoordinates = { latitude: coords.latitude, longitude: coords.longitude };
+      const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "your local time zone";
+      elements.sunStatus.textContent = `Showing sunrise and sunset for your detected location in ${timeZone}.`;
+      renderCalendar();
+      initWeather(coords);
     },
     () => {
+      elements.sunStatus.textContent = "Allow location access to show local sunrise and sunset times on the calendar.";
       elements.weatherStatus.textContent = "Allow location access to see your local 7-day forecast.";
     },
     { enableHighAccuracy: false, timeout: 10000 }
@@ -420,7 +523,7 @@ function init() {
   jumpToJapanToday();
   setupControls();
   updateClock();
-  initWeather();
+  initLocalData();
   setInterval(updateClock, 1000);
 }
 
