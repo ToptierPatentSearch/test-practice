@@ -357,6 +357,15 @@ h1 {
   font-weight: 800;
 }
 
+.sun-times {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  color: #ffe8b0;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 .holiday-list time {
   display: block;
   color: var(--gold);

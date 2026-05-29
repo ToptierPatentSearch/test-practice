@@ -1,6 +1,7 @@
 const JAPAN_TIME_ZONE = "Asia/Tokyo";
 const TEMPERATURE_UNIT = "celsius";
 const TEMPERATURE_UNIT_LABEL = "°C";
+const SUN_TIME_FORMAT_OPTIONS = { hour: "numeric", minute: "2-digit" };
 const monthFormatter = new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: JAPAN_TIME_ZONE });
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
   weekday: "long",
@@ -328,7 +329,7 @@ async function fetchWeatherForecast(lat, lon) {
   url.search = new URLSearchParams({
     latitude: lat,
     longitude: lon,
-    daily: "weathercode,temperature_2m_max,temperature_2m_min",
+    daily: "weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset",
     timezone: "auto",
     forecast_days: "7",
     temperature_unit: TEMPERATURE_UNIT,
@@ -342,8 +343,26 @@ async function fetchWeatherForecast(lat, lon) {
   return response.json();
 }
 
+function formatLocalSunTime(isoDateTime) {
+  const [, localTime = ""] = String(isoDateTime ?? "").split("T");
+  const [hour, minute] = localTime.split(":").map(Number);
+
+  if (!Number.isInteger(hour) || !Number.isInteger(minute)) {
+    return "—";
+  }
+
+  return new Date(2000, 0, 1, hour, minute).toLocaleTimeString(undefined, SUN_TIME_FORMAT_OPTIONS);
+}
+
 function renderWeather(forecast) {
-  const { time, weathercode, temperature_2m_max: max, temperature_2m_min: min } = forecast.daily;
+  const {
+    time,
+    weathercode,
+    temperature_2m_max: max,
+    temperature_2m_min: min,
+    sunrise,
+    sunset,
+  } = forecast.daily;
   elements.weatherList.innerHTML = "";
 
   time.forEach((isoDate, index) => {
@@ -352,12 +371,15 @@ function renderWeather(forecast) {
     const day = document.createElement("time");
     const summary = document.createElement("span");
     const temps = document.createElement("strong");
+    const sunTimes = document.createElement("span");
 
     day.dateTime = isoDate;
     day.textContent = date.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
     summary.textContent = weatherCodeLabel(weathercode[index]);
     temps.textContent = `${Math.round(max[index])}${TEMPERATURE_UNIT_LABEL} / ${Math.round(min[index])}${TEMPERATURE_UNIT_LABEL}`;
-    item.append(day, summary, temps);
+    sunTimes.className = "sun-times";
+    sunTimes.textContent = `☀️ ${formatLocalSunTime(sunrise[index])} · 🌙 ${formatLocalSunTime(sunset[index])}`;
+    item.append(day, summary, temps, sunTimes);
     elements.weatherList.append(item);
   });
 }
@@ -373,7 +395,7 @@ function initWeather() {
       try {
         elements.weatherStatus.textContent = "Loading 7-day local forecast…";
         const data = await fetchWeatherForecast(coords.latitude, coords.longitude);
-        elements.weatherStatus.textContent = `Forecast for ${data.timezone}. Max/Min temperatures in ${TEMPERATURE_UNIT_LABEL}.`;
+        elements.weatherStatus.textContent = `Forecast for ${data.timezone}. Max/Min temperatures and sunrise/sunset times use your local forecast timezone.`;
         renderWeather(data);
       } catch (error) {
         elements.weatherStatus.textContent = "Could not load weather forecast right now.";
