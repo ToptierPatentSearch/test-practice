@@ -1,0 +1,320 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #172033;
+  background: #edf4ff;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --accent: #3557ff;
+  --accent-dark: #263fc4;
+  --panel: rgba(255, 255, 255, 0.92);
+  --muted: #667085;
+  --border: #dce5f2;
+  --weekend: #fff5f5;
+  --shadow: 0 24px 80px rgba(38, 63, 196, 0.16);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(53, 87, 255, 0.2), transparent 26rem),
+    radial-gradient(circle at 85% 12%, rgba(255, 191, 105, 0.24), transparent 24rem),
+    linear-gradient(135deg, #f8fbff 0%, #edf4ff 100%);
+}
+
+button {
+  font: inherit;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+.app-shell {
+  width: min(1120px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2.5rem) 0;
+}
+
+.hero-card,
+.calendar-card {
+  border: 1px solid var(--border);
+  border-radius: 32px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.hero-card {
+  margin-bottom: 1.5rem;
+  padding: clamp(1.25rem, 4vw, 3rem);
+}
+
+.eyebrow {
+  margin: 0 0 0.75rem;
+  color: var(--accent-dark);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hero-content {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+h1,
+h2,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  max-width: 11ch;
+  margin-bottom: 1rem;
+  font-size: clamp(2.75rem, 9vw, 6.5rem);
+  line-height: 0.9;
+  letter-spacing: -0.08em;
+}
+
+.intro {
+  max-width: 46rem;
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.7;
+}
+
+.today-button,
+.nav-button {
+  border: 0;
+  color: #ffffff;
+  background: var(--accent);
+  box-shadow: 0 14px 30px rgba(53, 87, 255, 0.22);
+  transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+
+.today-button:hover,
+.nav-button:hover {
+  transform: translateY(-2px);
+  background: var(--accent-dark);
+  box-shadow: 0 18px 36px rgba(53, 87, 255, 0.28);
+}
+
+.today-button {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 0.85rem 1.2rem;
+  font-weight: 800;
+}
+
+.calendar-card {
+  padding: clamp(0.8rem, 3vw, 1.5rem);
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.nav-button {
+  display: grid;
+  width: 3.25rem;
+  height: 3.25rem;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 2.25rem;
+  line-height: 1;
+}
+
+.month-heading {
+  text-align: center;
+}
+
+.month-heading h2 {
+  margin-bottom: 0.25rem;
+  font-size: clamp(1.75rem, 4vw, 3rem);
+  letter-spacing: -0.04em;
+}
+
+.month-heading p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.weekday-grid,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.weekday-grid {
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.calendar-grid {
+  gap: 0.65rem;
+}
+
+.calendar-day {
+  position: relative;
+  min-height: 7.25rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: #ffffff;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.calendar-day:hover {
+  transform: translateY(-2px);
+  border-color: rgba(53, 87, 255, 0.38);
+  box-shadow: 0 16px 40px rgba(23, 32, 51, 0.1);
+}
+
+.calendar-day--weekend {
+  background: var(--weekend);
+}
+
+.calendar-day--muted {
+  color: #98a2b3;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.calendar-day--today {
+  border-color: var(--accent);
+  background: #eff3ff;
+  box-shadow: inset 0 0 0 2px rgba(53, 87, 255, 0.18);
+}
+
+.day-number {
+  display: inline-grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.calendar-day--today .day-number {
+  color: #ffffff;
+  background: var(--accent);
+}
+
+.day-badge {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  border-radius: 999px;
+  padding: 0.3rem 0.6rem;
+  color: var(--accent-dark);
+  background: rgba(53, 87, 255, 0.1);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    width: min(100% - 1rem, 44rem);
+    padding-top: 0.5rem;
+  }
+
+  .hero-card,
+  .calendar-card {
+    border-radius: 24px;
+  }
+
+  .hero-content {
+    display: grid;
+    align-items: stretch;
+  }
+
+  .today-button {
+    width: 100%;
+  }
+
+  .calendar-header {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .month-heading {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .nav-button:first-of-type {
+    grid-column: 1;
+  }
+
+  .nav-button:last-of-type {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  .weekday-grid {
+    gap: 0.25rem;
+    font-size: 0.68rem;
+  }
+
+  .calendar-grid {
+    gap: 0.35rem;
+  }
+
+  .calendar-day {
+    min-height: 4.5rem;
+    border-radius: 16px;
+    padding: 0.45rem;
+  }
+
+  .day-number {
+    width: 1.85rem;
+    height: 1.85rem;
+    font-size: 0.92rem;
+  }
+
+  .day-badge {
+    right: 0.4rem;
+    bottom: 0.4rem;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .calendar-day {
+    min-height: 3.75rem;
+  }
+
+  .weekday-grid span {
+    overflow: hidden;
+    text-overflow: clip;
+  }
+
+  .day-badge {
+    position: static;
+    display: block;
+    width: fit-content;
+    margin-top: 0.25rem;
+  }
+}
